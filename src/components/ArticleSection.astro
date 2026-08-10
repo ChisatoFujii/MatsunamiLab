@@ -1,0 +1,308 @@
+---
+import type { CollectionEntry } from "astro:content";
+
+interface PaginationLink {
+  page: number;
+  url: string;
+}
+
+interface Pagination {
+  currentPage: number;
+  lastPage: number;
+  nextUrl?: string;
+  pages: PaginationLink[];
+  previousUrl?: string;
+}
+
+interface Props {
+  articles: CollectionEntry<"blog">[];
+  pagination?: Pagination;
+}
+
+const { articles, pagination } = Astro.props;
+
+const formatDate = (date: Date) =>
+  new Intl.DateTimeFormat("ja-JP", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    timeZone: "Asia/Tokyo",
+  })
+    .format(date)
+    .replaceAll("/", ".");
+---
+
+<section
+  class="section article-section"
+  id="articles"
+  aria-labelledby="article-title"
+>
+  <div class="container">
+    <div class="section-heading">
+      <p>LATEST ARTICLES</p><h2 id="article-title">最新記事</h2>
+    </div>
+    <div class="article-layout">
+      <div class="article-main">
+        <div class="article-list">
+          {
+            articles.map((article) => (
+              <article class="article-card">
+                <a
+                  class="article-card-link"
+                  href={`/blog/${article.id}/`}
+                  aria-label={`${article.data.title}を読む`}
+                >
+                <div
+                  class:list={["thumbnail", article.data.color]}
+                  aria-label="記事のアイキャッチ画像"
+                  role="img"
+                >
+                  <>
+                    <span />
+                    <i />
+                  </>
+                </div>
+                <div class="article-body">
+                  <>
+                    <p class="article-meta">
+                      <>
+                        <time datetime={article.data.pubDate.toISOString()}>
+                          {formatDate(article.data.pubDate)}
+                        </time>
+                        <span class="article-category">{article.data.category}</span>
+                        {(article.data.subcategories ?? []).length > 0 && (
+  <span class="subcategory-separator" aria-hidden="true" />
+)}
+                        {(article.data.subcategories ?? []).map((subcategory) => (
+  <span class="subcategory-chip">{subcategory}</span>
+))}
+                      </>
+                    </p>
+                    <h3>{article.data.title}</h3>
+                    <p class="article-summary">{article.data.summary}</p>
+                    <span class="read-more">
+                      記事を読む <b aria-hidden="true">→</b>
+                    </span>
+                  </>
+                </div>
+                </a>
+              </article>
+            ))
+          }
+        </div>
+        {
+          pagination && pagination.lastPage > 1 && (
+            <nav class="pagination" aria-label="記事一覧のページネーション">
+              {pagination.previousUrl && (
+                <a href={pagination.previousUrl} aria-label="前のページ">←</a>
+              )}
+              {pagination.pages.map(({ page, url }) => (
+                <a
+                  class:list={{ current: page === pagination.currentPage }}
+                  href={url}
+                  aria-current={page === pagination.currentPage ? "page" : undefined}
+                >
+                  {page}
+                </a>
+              ))}
+              {pagination.nextUrl && (
+                <a href={pagination.nextUrl} aria-label="次のページ">→</a>
+              )}
+            </nav>
+          )
+        }
+      </div>
+      <slot />
+    </div>
+  </div>
+</section>
+
+<style>
+  .article-section {
+    background: #f8fafc;
+  }
+  .section-heading {
+    margin-bottom: 30px;
+  }
+  .section-heading p {
+    color: #2563eb;
+    font-size: 0.73rem;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    margin: 0 0 8px;
+  }
+.section-heading h2 {
+  color: #1f2937;
+  font-size: 1.2rem;
+  margin: 0;
+}
+  .article-layout {
+    align-items: start;
+    display: grid;
+    gap: 28px;
+    grid-template-columns: minmax(0, 1fr) 300px;
+  }
+  .article-list {
+    display: grid;
+    gap: 14px;
+  }
+  .article-card {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 14px;
+  }
+  .article-card-link {
+    color: inherit;
+    display: grid;
+    gap: 20px;
+    grid-template-columns: 190px minmax(0, 1fr);
+    text-decoration: none;
+  }
+  .thumbnail {
+    border-radius: 8px;
+    min-height: 145px;
+    overflow: hidden;
+    position: relative;
+  }
+  .thumbnail::before {
+    background: rgb(255 255 255 / 72%);
+    border-radius: 50%;
+    content: "";
+    height: 42px;
+    left: 52%;
+    position: absolute;
+    top: 25px;
+    width: 42px;
+  }
+  .thumbnail::after {
+    background: rgb(255 255 255 / 80%);
+    bottom: -26px;
+    clip-path: polygon(50% 0, 100% 100%, 0 100%);
+    content: "";
+    height: 120px;
+    left: -15px;
+    position: absolute;
+    width: 150px;
+  }
+  .thumbnail span {
+    background: rgb(255 255 255 / 66%);
+    bottom: -25px;
+    clip-path: polygon(50% 0, 100% 100%, 0 100%);
+    height: 135px;
+    position: absolute;
+    right: -10px;
+    width: 170px;
+  }
+  .thumbnail i {
+    background: rgb(255 255 255 / 80%);
+    border-radius: 4px;
+    height: 12px;
+    left: 25px;
+    position: absolute;
+    top: 25px;
+    width: 42px;
+  }
+  .blue {
+    background: #bfdbfe;
+  }
+  .green {
+    background: #bbf7d0;
+  }
+  .purple {
+    background: #ddd6fe;
+  }
+  .article-body {
+    padding: 4px 5px 3px 0;
+  }
+  .article-meta {
+    color: #6b7280;
+    font-size: 0.76rem;
+    margin: 0 0 8px;
+  }
+  .article-meta .article-category {
+    border-left: 1px solid #d1d5db;
+    color: #2563eb;
+    margin-left: 10px;
+    padding-left: 10px;
+  }
+  .article-meta .subcategory-chip {
+    background: #dbeafe;
+    border-radius: 999px;
+    color: #2563eb;
+    display: inline-block;
+    font-size: .68rem;
+    margin-left: 10px;
+    padding: 2px 7px;
+  }
+  .article-meta .subcategory-separator {
+    border-left: 1px solid #d1d5db;
+    display: inline-block;
+    height: .9em;
+    margin-left: 10px;
+    margin-right: 4px;
+    vertical-align: -.1em;
+  }
+  .article-card h3 {
+    color: #1f2937;
+    font-size: 1.05rem;
+    line-height: 1.5;
+    margin: 0;
+  }
+  .article-summary {
+    color: #6b7280;
+    font-size: 0.82rem;
+    line-height: 1.75;
+    margin: 8px 0;
+  }
+  .read-more {
+    color: #2563eb;
+    display: inline-block;
+    font-size: 0.8rem;
+    font-weight: 700;
+  }
+  .read-more b {
+    margin-left: 6px;
+  }
+  .pagination {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    margin-top: 28px;
+  }
+  .pagination a {
+    align-items: center;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    color: #4b5563;
+    display: inline-flex;
+    font-size: 0.85rem;
+    font-weight: 700;
+    height: 36px;
+    justify-content: center;
+    min-width: 36px;
+    padding: 0 10px;
+    text-decoration: none;
+  }
+  .pagination a:hover,
+  .pagination a.current {
+    background: #2563eb;
+    border-color: #2563eb;
+    color: #fff;
+  }
+  @media (max-width: 850px) {
+    .article-layout {
+      grid-template-columns: 1fr;
+    }
+  }
+  @media (max-width: 560px) {
+    .article-card-link {
+      grid-template-columns: 1fr;
+    }
+    .thumbnail {
+      min-height: 155px;
+    }
+  }
+</style>

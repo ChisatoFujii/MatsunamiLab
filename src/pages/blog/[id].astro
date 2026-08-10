@@ -1,0 +1,141 @@
+---
+import { getCollection, render, type CollectionEntry } from 'astro:content';
+import ArticleLayout from '../../layouts/ArticleLayout.astro';
+import ArticleSection from '../../components/ArticleSection.astro';
+import ArticleSidebar from '../../components/ArticleSidebar.astro';
+import Footer from '../../components/Footer.astro';
+import Header from '../../components/Header.astro';
+import ProfileCard from '../../components/ProfileCard.astro';
+
+export async function getStaticPaths() {
+  const articlesPerPage = 6;
+  const posts = (await getCollection('blog')).sort(
+    (a, b) => b.data.pubDate.getTime() - a.data.pubDate.getTime(),
+  );
+  const totalPages = Math.ceil(posts.length / articlesPerPage);
+  const pagePaths = Array.from({ length: Math.max(totalPages - 1, 0) }, (_, index) => {
+    const currentPage = index + 2;
+
+    return {
+      params: { id: String(currentPage) },
+      props: {
+        kind: 'listing' as const,
+        page: {
+          currentPage,
+          data: posts.slice(
+            (currentPage - 1) * articlesPerPage,
+            currentPage * articlesPerPage,
+          ),
+          lastPage: totalPages,
+        },
+      },
+    };
+  });
+
+  return [
+    ...posts.map((post) => ({
+      params: { id: post.id },
+      props: { kind: 'article' as const, post },
+    })),
+    ...pagePaths,
+  ];
+}
+
+interface ArticleProps {
+  kind: 'article';
+  post: CollectionEntry<'blog'>;
+}
+
+interface ListingProps {
+  kind: 'listing';
+  page: {
+    currentPage: number;
+    data: CollectionEntry<'blog'>[];
+    lastPage: number;
+  };
+}
+
+const props = Astro.props as ArticleProps | ListingProps;
+const pageUrl = (pageNumber: number) =>
+  pageNumber === 1 ? '/blog/' : `/blog/${pageNumber}/`;
+const pagination = props.kind === 'listing'
+  ? {
+      currentPage: props.page.currentPage,
+      lastPage: props.page.lastPage,
+      pages: Array.from({ length: props.page.lastPage }, (_, index) => ({
+        page: index + 1,
+        url: pageUrl(index + 1),
+      })),
+      previousUrl: props.page.currentPage > 1 ? pageUrl(props.page.currentPage - 1) : undefined,
+      nextUrl: props.page.currentPage < props.page.lastPage ? pageUrl(props.page.currentPage + 1) : undefined,
+    }
+  : undefined;
+const renderedArticle = props.kind === 'article' ? await render(props.post) : undefined;
+const Content = renderedArticle?.Content;
+const sortedPosts = (await getCollection('blog')).sort(
+  (a, b) => b.data.pubDate.getTime() - a.data.pubDate.getTime(),
+);
+const currentIndex = props.kind === 'article'
+  ? sortedPosts.findIndex((post) => post.id === props.post.id)
+  : -1;
+const relatedPosts = props.kind === 'article'
+  ? sortedPosts
+      .filter((post) => post.id !== props.post.id)
+      .sort((a, b) => {
+        const score = (post: CollectionEntry<'blog'>) =>
+          (post.data.category === props.post.data.category ? 100 : 0) +
+          (post.data.subcategories ?? []).filter((subcategory) =>
+            (props.post.data.subcategories ?? []).includes(subcategory),
+          ).length * 10;
+        return score(b) - score(a) || b.data.pubDate.getTime() - a.data.pubDate.getTime();
+      })
+      .slice(0, 3)
+  : [];
+const newerPost = currentIndex > 0 ? sortedPosts[currentIndex - 1] : undefined;
+const olderPost = currentIndex >= 0 ? sortedPosts[currentIndex + 1] : undefined;
+---
+
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="description" content={props.kind === 'article' ? props.post.data.summary : 'ブログ記事一覧'} />
+    <title>{props.kind === 'article' ? `${props.post.data.title} | Matsunami Automation Works` : 'ブログ | Matsunami Automation Works'}</title>
+  </head>
+  <body>
+    {props.kind === 'listing' ? (
+      <div class="blog-listing">
+        <Header />
+        <main>
+          <ArticleSection articles={props.page.data} {pagination}>
+            <ArticleSidebar><ProfileCard /></ArticleSidebar>
+          </ArticleSection>
+        </main>
+        <Footer />
+      </div>
+    ) : (
+      <ArticleLayout
+        title={props.post.data.title}
+        category={props.post.data.category}
+        subcategories={props.post.data.subcategories ?? []}
+        pubDate={props.post.data.pubDate}
+        updatedDate={props.post.data.updatedDate}
+        tags={props.post.data.tags}
+        headings={renderedArticle?.headings ?? []}
+        relatedPosts={relatedPosts}
+        newerPost={newerPost}
+        olderPost={olderPost}
+      >
+        {Content && <Content />}
+      </ArticleLayout>
+    )}
+  </body>
+</html>
+
+<style is:global>
+  .blog-listing { background: #fff; color: #1f2937; font-family: "Noto Sans JP", "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif; }
+  .blog-listing * { box-sizing: border-box; }
+  .blog-listing .container { margin: 0 auto; max-width: 1200px; padding-left: 24px; padding-right: 24px; width: 100%; }
+  .blog-listing .section { padding-bottom: 32px; padding-top: 32px; }
+  @media (max-width: 640px) { .blog-listing .section { padding-bottom: 64px; padding-top: 64px; } .blog-listing .container { padding-left: 20px; padding-right: 20px; } }
+</style>

@@ -1,0 +1,47 @@
+<section class="hero" id="home">
+  <div class="container hero-inner">
+    <div class="hero-art">
+      <img src="/images/mainImage.png" alt="Matsunami Automation Works" />
+    </div>
+  </div>
+</section>
+
+<style>
+.hero {
+  background: #ffffff;
+  overflow: hidden;
+  padding: 20px 0;
+}
+  .hero-inner {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+.hero-art {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  width: 100%;
+  max-width: 900px;
+}
+
+.hero-art img,
+.hero-art video {
+  display: block;
+  width: 40%;
+  height: auto;
+  border-radius: 24px;
+}
+
+  @media (max-width: 768px) {
+    .hero {
+      padding: 48px 16px;
+    }
+
+    .hero-art {
+      max-width: 100%;
+    }
+  }
+</style>

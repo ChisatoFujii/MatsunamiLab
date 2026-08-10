@@ -1,0 +1,69 @@
+<div class="article-search">
+  <form class="article-search-form" action="/search" method="get" role="search">
+    <label class="sr-only" for="article-search">ブログ記事を検索</label>
+    <input id="article-search" name="q" type="search" placeholder="記事を検索" />
+    <button type="submit">検索</button>
+  </form>
+</div>
+
+<style>
+  .article-search-form {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    display: flex;
+    gap: 8px;
+    padding: 14px;
+  }
+  .article-search-form input {
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    color: #1f2937;
+    font: inherit;
+    font-size: .82rem;
+    min-width: 0;
+    padding: 9px 10px;
+    width: 100%;
+  }
+  .article-search-form input::placeholder {
+    color: #9ca3af;
+  }
+  .article-search-form input:focus {
+    border-color: #2563eb;
+    outline: 2px solid rgb(37 99 235 / 20%);
+    outline-offset: 1px;
+  }
+  .article-search-form button {
+    background: #2563eb;
+    border: 1px solid #2563eb;
+    border-radius: 6px;
+    color: #fff;
+    cursor: pointer;
+    font: inherit;
+    font-size: .82rem;
+    font-weight: 700;
+    padding: 9px 13px;
+  }
+  .article-search-form button:hover {
+    background: #1d4ed8;
+    border-color: #1d4ed8;
+  }
+  .sr-only {
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    padding: 0;
+    position: absolute;
+    width: 1px;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+  }
+  @media (max-width: 360px) {
+    .article-search-form {
+      flex-direction: column;
+    }
+    .article-search-form button {
+      width: 100%;
+    }
+  }
+</style>

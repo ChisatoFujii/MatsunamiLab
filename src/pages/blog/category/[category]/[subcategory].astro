@@ -1,0 +1,282 @@
+---
+import { getCollection, type CollectionEntry } from 'astro:content';
+import Footer from '../../../../components/Footer.astro';
+import Header from '../../../../components/Header.astro';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('blog');
+  const groups = new Map<string, Set<string>>();
+
+  for (const post of posts) {
+    const subcategories =
+      groups.get(post.data.category) ?? new Set<string>();
+
+    for (const subcategory of post.data.subcategories ?? []) {
+      subcategories.add(subcategory);
+    }
+
+    groups.set(post.data.category, subcategories);
+  }
+
+  return [...groups.entries()].flatMap(([category, subcategories]) =>
+    [...subcategories].map((subcategory) => ({
+      params: { category, subcategory },
+      props: {
+        category,
+        subcategory,
+        posts: posts
+          .filter(
+            (post) =>
+              post.data.category === category &&
+              (post.data.subcategories ?? []).includes(subcategory),
+          )
+          .sort(
+            (a, b) => b.data.pubDate.getTime() - a.data.pubDate.getTime(),
+          ),
+      },
+    })),
+  );
+}
+
+interface Props {
+  category: string;
+  subcategory: string;
+  posts: CollectionEntry<'blog'>[];
+}
+
+const { category, subcategory, posts } = Astro.props;
+
+const formatDate = (date: Date) =>
+  new Intl.DateTimeFormat('ja-JP', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    timeZone: 'Asia/Tokyo',
+  })
+    .format(date)
+    .replaceAll('/', '.');
+---
+
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="description" content={`${category} / ${subcategory} の記事一覧`} />
+    <title>{category} / {subcategory} の記事 | Matsunami Automation Works</title>
+  </head>
+  <body>
+    <Header />
+    <main>
+      <section class="category-hero" aria-labelledby="category-title">
+        <div class="container">
+          <p class="eyebrow">CATEGORY</p>
+          <p class="category-path">{category} <span aria-hidden="true">/</span> {subcategory}</p>
+          <h1 id="category-title">{category} / {subcategory} の記事</h1>
+        </div>
+      </section>
+
+      <section class="category-content">
+        <div class="container">
+          <section class="search-panel" aria-labelledby="search-title">
+            <div class="search-copy">
+              <p class="eyebrow">SEARCH</p>
+              <h2 id="search-title">記事を探す</h2>
+              <p>キーワードから知りたい情報を見つけられます。</p>
+              <form class="search-form" action="/search" method="get" role="search">
+                <label class="sr-only" for="category-search">ブログ記事を検索</label>
+                <input id="category-search" name="q" type="search" placeholder="例：Power Automate、生成AI" />
+                <button type="submit">検索 <span aria-hidden="true">→</span></button>
+              </form>
+            </div>
+            <img src="/images/search.png" alt="記事検索をイメージしたイラスト" />
+          </section>
+
+          <section class="article-section" aria-labelledby="article-list-title">
+            <div class="article-section-heading">
+              <div>
+                <p class="eyebrow">ARTICLES</p>
+                <h2 id="article-list-title">{subcategory}の記事一覧</h2>
+              </div>
+              <p>{posts.length}件</p>
+            </div>
+            <div class="article-list">
+              {posts.map((post) => (
+                <article class="article-card">
+                  <a href={`/blog/${post.id}/`} class="article-card-link" aria-label={`${post.data.title}を読む`}>
+                    <div class:list={['thumbnail', post.data.color]} aria-hidden="true">
+                      <span />
+                      <i />
+                    </div>
+                    <div class="article-body">
+                      <p class="article-meta">
+                        <time datetime={post.data.pubDate.toISOString()}>{formatDate(post.data.pubDate)}</time>
+                        <span class="article-category">{post.data.category}</span>
+                        {(post.data.subcategories ?? []).map((item) => <span class="subcategory-chip">{item}</span>)}
+                      </p>
+                      <h3>{post.data.title}</h3>
+                      <p class="article-summary">{post.data.summary}</p>
+                      <span class="read-more">記事を読む <b aria-hidden="true">→</b></span>
+                    </div>
+                  </a>
+                </article>
+              ))}
+            </div>
+            <p class="back-link"><a href={`/blog/category/${category}/`}>{category}の記事一覧に戻る <span aria-hidden="true">→</span></a></p>
+          </section>
+        </div>
+      </section>
+    </main>
+    <Footer />
+  </body>
+</html>
+
+<style is:global>
+  :root {
+    font-family: "Noto Sans JP", "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+    color: #1f2937;
+    background: #fff;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; }
+  .container {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding-right: 24px;
+    padding-left: 24px;
+  }
+</style>
+
+<style>
+  .category-hero {
+    padding: 56px 0 48px;
+    background: #fff;
+    border-bottom: 1px solid #e5e7eb;
+  }
+  .eyebrow {
+    margin: 0 0 8px;
+    color: #3b82f6;
+    font-size: .73rem;
+    font-weight: 800;
+    letter-spacing: .14em;
+  }
+  .category-path {
+    margin: 0 0 8px;
+    color: #6b7280;
+    font-size: .88rem;
+  }
+  .category-path span { margin: 0 6px; color: #facc15; }
+  .category-hero h1 {
+    margin: 0;
+    color: #1f2937;
+    font-size: clamp(1.75rem, 3vw, 2.35rem);
+    line-height: 1.4;
+  }
+  .category-content { padding: 48px 0 72px; background: #f8fafc; }
+  .search-panel {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(230px, 320px);
+    align-items: center;
+    gap: 40px;
+    margin-bottom: 48px;
+    padding: 32px 40px;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+  }
+  .search-copy h2,
+  .article-section-heading h2 {
+    margin: 0;
+    color: #1f2937;
+    font-size: clamp(1.2rem, 2vw, 1.45rem);
+  }
+  .search-copy > p:not(.eyebrow) {
+    margin: 8px 0 18px;
+    color: #6b7280;
+    font-size: .9rem;
+  }
+  .search-panel img {
+    display: block;
+    width: 100%;
+    max-width: 300px;
+    height: auto;
+    justify-self: end;
+  }
+  .search-form { display: flex; gap: 8px; max-width: 570px; }
+  .search-form input {
+    width: 100%;
+    min-width: 0;
+    padding: 11px 12px;
+    color: #1f2937;
+    background: #fff;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font: inherit;
+    font-size: .9rem;
+  }
+  .search-form input::placeholder { color: #9ca3af; }
+  .search-form input:focus { border-color: #3b82f6; outline: 2px solid rgb(59 130 246 / 20%); outline-offset: 1px; }
+  .search-form button {
+    flex: 0 0 auto;
+    padding: 11px 15px;
+    color: #fff;
+    background: #3b82f6;
+    border: 1px solid #3b82f6;
+    border-radius: 8px;
+    font: inherit;
+    font-size: .9rem;
+    font-weight: 700;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+  .search-form button:hover { background: #2563eb; border-color: #2563eb; }
+  .search-form button:focus-visible { outline: 2px solid #facc15; outline-offset: 2px; }
+  .article-section { max-width: 840px; }
+  .article-section-heading {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: 24px;
+    margin-bottom: 20px;
+  }
+  .article-section-heading > p { margin: 0; color: #6b7280; font-size: .82rem; }
+  .article-list { display: grid; gap: 14px; }
+  .article-card { padding: 14px; background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; }
+  .article-card-link { display: grid; grid-template-columns: 190px minmax(0, 1fr); gap: 20px; color: inherit; text-decoration: none; }
+  .article-card-link:hover h3, .article-card-link:focus-visible h3 { color: #3b82f6; }
+  .article-card-link:focus-visible { outline: 3px solid #93c5fd; outline-offset: 3px; border-radius: 8px; }
+  .thumbnail { position: relative; min-height: 145px; overflow: hidden; border-radius: 8px; }
+  .thumbnail::before { position: absolute; top: 25px; left: 52%; width: 42px; height: 42px; content: ""; background: rgb(255 255 255 / 72%); border-radius: 50%; }
+  .thumbnail::after { position: absolute; bottom: -26px; left: -15px; width: 150px; height: 120px; content: ""; background: rgb(255 255 255 / 80%); clip-path: polygon(50% 0, 100% 100%, 0 100%); }
+  .thumbnail span { position: absolute; right: -10px; bottom: -25px; width: 170px; height: 135px; background: rgb(255 255 255 / 66%); clip-path: polygon(50% 0, 100% 100%, 0 100%); }
+  .thumbnail i { position: absolute; top: 25px; left: 25px; width: 42px; height: 12px; background: rgb(255 255 255 / 80%); border-radius: 4px; }
+  .blue { background: #bfdbfe; }
+  .green { background: #bbf7d0; }
+  .purple { background: #ddd6fe; }
+  .article-body { padding: 4px 5px 3px 0; }
+  .article-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 0 0 8px; color: #6b7280; font-size: .76rem; }
+  .article-category { padding-left: 10px; color: #3b82f6; border-left: 1px solid #d1d5db; }
+  .subcategory-chip { padding: 2px 7px; color: #2563eb; background: #dbeafe; border-radius: 999px; font-size: .68rem; }
+  .article-card h3 { margin: 0; color: #1f2937; font-size: 1.05rem; line-height: 1.5; }
+  .article-summary { margin: 8px 0; color: #6b7280; font-size: .82rem; line-height: 1.75; }
+  .read-more { display: inline-block; color: #3b82f6; font-size: .8rem; font-weight: 700; }
+  .read-more b { margin-left: 6px; }
+  .back-link { margin: 32px 0 0; }
+  .back-link a { color: #3b82f6; font-size: .9rem; font-weight: 700; text-decoration: none; }
+  .back-link a:hover { text-decoration: underline; text-underline-offset: 4px; }
+  .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+  @media (max-width: 720px) {
+    .category-hero { padding: 40px 0 36px; }
+    .category-content { padding: 32px 0 56px; }
+    .search-panel { grid-template-columns: 1fr; gap: 22px; padding: 24px; }
+    .search-panel img { max-width: 280px; justify-self: center; order: 2; }
+    .article-card-link { grid-template-columns: 1fr; }
+    .thumbnail { min-height: 170px; }
+  }
+  @media (max-width: 480px) {
+    .container { padding-right: 20px; padding-left: 20px; }
+    .search-form { flex-direction: column; }
+    .search-form button { width: 100%; }
+    .article-section-heading { align-items: start; flex-direction: column; gap: 8px; }
+  }
+</style>

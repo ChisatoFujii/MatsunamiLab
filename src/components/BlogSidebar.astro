@@ -1,0 +1,195 @@
+---
+import { getCollection } from 'astro:content';
+
+const posts = (await getCollection('blog')).sort(
+  (a, b) => b.data.pubDate.getTime() - a.data.pubDate.getTime(),
+);
+const levelOrder = ['初級', '中級', '上級'] as const;
+type Level = (typeof levelOrder)[number];
+
+interface LevelGroup {
+  count: number;
+  subcategories: Map<string, number>;
+}
+
+interface CategoryGroup {
+  count: number;
+  levels: Map<Level, LevelGroup>;
+}
+
+const categoryGroups = new Map<string, CategoryGroup>();
+
+for (const post of posts) {
+  const group = categoryGroups.get(post.data.category) ?? {
+    count: 0,
+    levels: new Map<Level, LevelGroup>(),
+  };
+  const levelGroup = group.levels.get(post.data.level) ?? {
+    count: 0,
+    subcategories: new Map<string, number>(),
+  };
+
+  group.count += 1;
+  levelGroup.count += 1;
+  for (const subcategory of post.data.subcategories ?? []) {
+    levelGroup.subcategories.set(
+      subcategory,
+      (levelGroup.subcategories.get(subcategory) ?? 0) + 1,
+    );
+  }
+  group.levels.set(post.data.level, levelGroup);
+  categoryGroups.set(post.data.category, group);
+}
+
+const categories = [...categoryGroups.entries()].sort(([a], [b]) => a.localeCompare(b, 'ja'));
+const recentPosts = posts.slice(0, 5);
+---
+
+<aside class="blog-sidebar" aria-label="ブログ情報">
+  <section aria-labelledby="category-list-title">
+    <h2 id="category-list-title">カテゴリ</h2>
+    <ul>
+      {categories.map(([category, group]) => (
+        <li>
+          <details class="category-details">
+            <summary>{category}（{group.count}）</summary>
+            <div class="category-children">
+              <ul class="level-list">
+                {levelOrder.map((level) => {
+                  const levelGroup = group.levels.get(level);
+                  return levelGroup && (
+                    <li>
+                      <details class="level-details">
+                        <summary>{level}（{levelGroup.count}）</summary>
+                        <ul class="subcategory-list">
+                          {[...levelGroup.subcategories.entries()]
+                            .sort(([a], [b]) => a.localeCompare(b, 'ja'))
+                            .map(([subcategory, count]) => (
+                              <li><a href={`/blog/category/${category}/${subcategory}/`}>{subcategory}（{count}）</a></li>
+                            ))}
+                        </ul>
+                      </details>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          </details>
+        </li>
+      ))}
+    </ul>
+  </section>
+  <section aria-labelledby="recent-posts-title">
+    <h2 id="recent-posts-title">最新の投稿</h2>
+    <ul>
+      {recentPosts.map((post) => (
+        <li><a href={`/blog/${post.id}/`}>{post.data.title}</a></li>
+      ))}
+    </ul>
+  </section>
+</aside>
+
+<style>
+  .blog-sidebar {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 25px;
+  }
+  .blog-sidebar section + section {
+    border-top: 1px solid #e5e7eb;
+    margin-top: 22px;
+    padding-top: 22px;
+  }
+  .blog-sidebar h2 {
+    color: #1f2937;
+    font-size: 1rem;
+    margin: 0 0 12px;
+  }
+  .blog-sidebar ul {
+    display: grid;
+    gap: 8px;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .blog-sidebar a {
+    color: #4b5563;
+    font-size: .82rem;
+    line-height: 1.5;
+    text-decoration: none;
+  }
+  .blog-sidebar a:hover {
+    color: #2563eb;
+  }
+  .blog-sidebar .category-details > summary {
+    color: #4b5563;
+    cursor: pointer;
+    font-size: .82rem;
+    line-height: 1.5;
+    list-style: none;
+  }
+  .blog-sidebar .category-details > summary::-webkit-details-marker {
+    display: none;
+  }
+  .blog-sidebar .category-details > summary::before {
+    content: '▶';
+    display: inline-block;
+    font-size: .7em;
+    margin-right: 6px;
+  }
+  .blog-sidebar .category-details[open] > summary::before {
+    content: '▼';
+  }
+  .blog-sidebar .category-details > summary:hover {
+    color: #2563eb;
+  }
+  .blog-sidebar .category-children {
+    content-visibility: hidden;
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 180ms ease, content-visibility 0s linear 180ms;
+  }
+  .blog-sidebar .category-details[open] .category-children {
+    content-visibility: visible;
+    grid-template-rows: 1fr;
+    transition: grid-template-rows 180ms ease;
+  }
+  .blog-sidebar .category-children > .level-list {
+    min-height: 0;
+    overflow: hidden;
+  }
+  .blog-sidebar .level-list {
+    gap: 5px;
+    margin: 6px 0 0 12px;
+  }
+  .blog-sidebar .level-details > summary {
+    color: #4b5563;
+    cursor: pointer;
+    font-size: .8rem;
+    line-height: 1.5;
+    list-style: none;
+  }
+  .blog-sidebar .level-details > summary::-webkit-details-marker {
+    display: none;
+  }
+  .blog-sidebar .level-details > summary::before {
+    content: '▶';
+    display: inline-block;
+    font-size: .7em;
+    margin-right: 6px;
+  }
+  .blog-sidebar .level-details[open] > summary::before {
+    content: '▼';
+  }
+  .blog-sidebar .level-details > summary:hover {
+    color: #2563eb;
+  }
+  .blog-sidebar .subcategory-list {
+    gap: 5px;
+    margin: 6px 0 0 18px;
+  }
+  .blog-sidebar .subcategory-list a {
+    font-size: .78rem;
+  }
+</style>

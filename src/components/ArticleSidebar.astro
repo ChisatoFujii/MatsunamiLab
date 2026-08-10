@@ -1,0 +1,17 @@
+---
+import BlogSidebar from './BlogSidebar.astro';
+import ArticleSearchForm from './ArticleSearchForm.astro';
+---
+
+<div class="article-sidebar">
+  <slot />
+  <ArticleSearchForm />
+  <BlogSidebar />
+</div>
+
+<style>
+  .article-sidebar {
+    display: grid;
+    gap: 20px;
+  }
+</style>

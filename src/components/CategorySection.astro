@@ -1,0 +1,512 @@
+---
+interface Category {
+  title: string;
+  description: string;
+  icon: string;
+  color: string;
+  comingSoon?: boolean;
+}
+
+const categories: Category[] = [
+  {
+    title: "AI・その他",
+    description: "生成AIと一緒に、もっと便利にしよう",
+    icon: "/images/CopilotStudio_scalable.svg",
+    color: "pink",
+    comingSoon: true,
+  },
+  {
+    title: "Power Automate Desktop",
+    description: "PCにお仕事を覚えさせよう",
+    icon: "/images/PowerAutomate_scalable.svg",
+    color: "blue",
+    comingSoon: true,
+  },
+  {
+    title: "Power Automate",
+    description: "PCを開かなくても動く仕組みを作ろう",
+    icon: "/images/PowerAutomate_scalable.svg",
+    color: "cloud",
+    comingSoon: true,
+  },
+  {
+    title: "Power Apps",
+    description: "自分だけの使いやすいアプリを作ろう",
+    icon: "/images/PowerApps_scalable.svg",
+    color: "purple",
+    comingSoon: true,
+  },
+];
+---
+
+<section class="section categories" aria-label="学習カテゴリ">
+  <div class="container">
+
+    <div class="learning-guide">
+      <span>START LEARNING</span>
+      <h2>初学者の方・体系的に学びたい方はこちら</h2>
+    </div>
+
+    <div class="category-layout">
+
+      <!-- 親子 -->
+      <div class="hero-art">
+        <img
+          src="/images/mainImage.png"
+          alt="Matsunami Automation Works"
+        />
+      </div>
+
+      <!-- カテゴリ -->
+      {
+        categories.map((category, index) => (
+          <a
+            class:list={[
+              "category-card",
+              category.color,
+              `card-${index + 1}`,
+            ]}
+            href="#articles"
+          >
+            <div class="card-body">
+              <div class="category-header">
+                <img
+                  class="category-icon"
+                  src={category.icon}
+                  alt=""
+                  aria-hidden="true"
+                />
+
+                <h3>{category.title}</h3>
+              </div>
+            </div>
+
+            <div class="card-tooltip">
+              <p>{category.description}</p>
+
+              <span class="more">
+                {category.comingSoon ? (
+                  <>工事中</>
+                ) : (
+                  <>
+                    ここからやってみる
+                    <b aria-hidden="true">→</b>
+                  </>
+                )}
+              </span>
+            </div>
+          </a>
+        ))
+      }
+
+    </div>
+  </div>
+</section>
+
+<style>
+/* =========================
+   START LEARNING
+========================= */
+
+.learning-guide {
+  margin-top: 5px;
+  margin-bottom: 24px;
+}
+
+.learning-guide span {
+  color: #2563eb;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+}
+
+.learning-guide h2 {
+  color: #1f2937;
+  font-size: 1.2rem;
+  margin: 2px 0 0;
+}
+
+/* =========================
+   親子＋カテゴリ
+========================= */
+
+.category-layout {
+  display: grid;
+
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: 180px 58px;
+
+  width: 100%;
+  max-width: none;
+  margin: 0;
+
+  column-gap: 12px;
+  row-gap: 12px;
+
+  align-items: center;
+}
+
+/* =========================
+   親子
+========================= */
+
+.category-layout {
+  display: grid;
+
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: 160px 58px;
+
+  width: 100%;
+  max-width: none;
+  margin: 0;
+
+  column-gap: 12px;
+  row-gap: 0;
+
+  align-items: center;
+}
+
+.hero-art {
+  grid-column: 1 / 5;
+  grid-row: 1;
+
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+
+  transform: translateY(12px);
+}
+.hero-art img {
+  display: block;
+  width: min(280px, 100%);
+  height: auto;
+}
+
+/* =========================
+   カード
+========================= */
+
+.category-card {
+  position: relative;
+
+  display: block;
+
+  width: 100%;
+  height: 58px;
+
+  color: #1f2937;
+  text-decoration: none;
+
+  overflow: visible;
+}
+
+.card-body {
+  position: relative;
+
+  display: flex;
+  align-items: center;
+
+  width: 100%;
+  height: 100%;
+
+  padding: 0 16px;
+
+  box-sizing: border-box;
+  overflow: hidden;
+
+  background: #fff;
+
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+
+  color: #1f2937;
+
+  transition:
+    border-color .18s ease,
+    box-shadow .18s ease,
+    transform .18s ease;
+}
+
+.category-card:hover .card-body {
+  border-color: #d1d5db;
+
+  box-shadow: 0 5px 16px rgb(31 41 55 / 7%);
+
+  transform: translateY(-1px);
+}
+
+/* =========================
+   タイトル
+========================= */
+
+.category-header {
+  position: relative;
+  z-index: 2;
+
+  display: flex;
+  align-items: center;
+
+  width: 100%;
+
+  gap: 11px;
+}
+
+.category-header h3 {
+  margin: 0;
+
+  color: #1f2937;
+
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+/* =========================
+   アイコン
+========================= */
+
+.category-icon {
+  width: 27px;
+  height: 27px;
+
+  flex-shrink: 0;
+
+  object-fit: contain;
+
+  opacity: .9;
+
+  pointer-events: none;
+}
+
+/* =========================
+   左側アクセント
+========================= */
+
+.category-card::before {
+  content: "";
+
+  position: absolute;
+  z-index: 3;
+
+  top: 15px;
+  bottom: 15px;
+  left: 0;
+
+  width: 3px;
+
+  border-radius: 0 3px 3px 0;
+
+  pointer-events: none;
+}
+
+.category-card.pink::before {
+  background: #ec4899;
+}
+
+.category-card.blue::before {
+  background: #2563eb;
+}
+
+.category-card.cloud::before {
+  background: #0f6cbd;
+}
+
+.category-card.purple::before {
+  background: #7c3aed;
+}
+
+.pink,
+.blue,
+.cloud,
+.purple {
+  background: transparent;
+  color: #1f2937;
+}
+
+/* =========================
+   吹き出し
+========================= */
+
+.card-tooltip {
+  position: absolute;
+  z-index: 30;
+
+  top: calc(100% + 10px);
+  left: 0;
+
+  width: 250px;
+
+  padding: 12px 14px;
+
+  box-sizing: border-box;
+
+  background: #fff;
+
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+
+  box-shadow: 0 8px 24px rgb(31 41 55 / 12%);
+
+  opacity: 0;
+  visibility: hidden;
+
+  transform: translateY(-4px) scale(.98);
+
+  transition:
+    opacity .15s ease,
+    transform .15s ease,
+    visibility .15s;
+}
+
+.card-tooltip::before {
+  content: "";
+
+  position: absolute;
+
+  top: -6px;
+  left: 24px;
+
+  width: 10px;
+  height: 10px;
+
+  background: #fff;
+
+  border-top: 1px solid #e5e7eb;
+  border-left: 1px solid #e5e7eb;
+
+  transform: rotate(45deg);
+}
+
+.card-tooltip p {
+  margin: 0 0 6px;
+
+  color: #4b5563;
+
+  font-size: .8rem;
+  line-height: 1.6;
+}
+
+.card-tooltip .more {
+  display: block;
+
+  color: #6b7280;
+
+  font-size: .72rem;
+  font-weight: 700;
+}
+
+.card-tooltip .more b {
+  margin-left: 6px;
+}
+
+.category-card:hover .card-tooltip,
+.category-card:focus-visible .card-tooltip {
+  opacity: 1;
+  visibility: visible;
+
+  transform: translateY(0) scale(1);
+}
+
+/* =========================
+   PC配置
+========================= */
+
+.card-1 {
+  grid-column: 1;
+  grid-row: 2;
+}
+
+.card-2 {
+  grid-column: 2;
+  grid-row: 2;
+}
+
+.card-3 {
+  grid-column: 3;
+  grid-row: 2;
+}
+
+.card-4 {
+  grid-column: 4;
+  grid-row: 2;
+}
+
+/* =========================
+   タブレット
+========================= */
+
+@media (max-width: 850px) {
+  .category-layout {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 260px 58px 58px;
+
+    gap: 16px;
+  }
+
+  .hero-art {
+    grid-column: 1 / 3;
+    grid-row: 1;
+  }
+
+  .card-1 {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  .card-2 {
+    grid-column: 2;
+    grid-row: 2;
+  }
+
+  .card-3 {
+    grid-column: 1;
+    grid-row: 3;
+  }
+
+  .card-4 {
+    grid-column: 2;
+    grid-row: 3;
+  }
+}
+
+/* =========================
+   iPhone
+========================= */
+
+@media (max-width: 480px) {
+  .category-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .hero-art {
+    order: 1;
+    width: 100%;
+  }
+
+  .card-1 {
+    order: 2;
+  }
+
+  .card-2 {
+    order: 3;
+  }
+
+  .card-3 {
+    order: 4;
+  }
+
+  .card-4 {
+    order: 5;
+  }
+
+  .category-card {
+    width: 100%;
+  }
+
+  .card-tooltip {
+    width: min(250px, 90vw);
+  }
+}
+</style>

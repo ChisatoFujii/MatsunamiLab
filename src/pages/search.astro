@@ -1,0 +1,268 @@
+---
+import { getCollection } from "astro:content";
+import Footer from "../components/Footer.astro";
+import Header from "../components/Header.astro";
+
+const formatDate = (date: Date) =>
+  new Intl.DateTimeFormat("ja-JP", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    timeZone: "Asia/Tokyo",
+  })
+    .format(date)
+    .replaceAll("/", ".");
+
+const toPlainText = (markdown: string) =>
+  markdown
+    .replace(/```[\s\S]*?```/g, " ")
+    .replace(/!\[([^\]]*)\]\([^)]*\)/g, "$1")
+    .replace(/\[([^\]]+)\]\([^)]*\)/g, "$1")
+    .replace(/`([^`]+)`/g, "$1")
+    .replace(/<[^>]*>/g, " ")
+    .replace(/^\s{0,3}#{1,6}\s+/gm, "")
+    .replace(/^\s*(?:[-*+] |\d+\. )/gm, "")
+    .replace(/[*_~]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+
+const articles = (await getCollection("blog")).map((article) => ({
+  title: article.data.title,
+  url: `/blog/${article.id}/`,
+  body: toPlainText(article.body),
+  pubDate: formatDate(article.data.pubDate),
+  category: article.data.category,
+  subcategories: article.data.subcategories ?? [],
+}));
+---
+
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="description" content="ブログ記事の検索結果" />
+    <title>記事検索 | Matsunami Automation Works</title>
+  </head>
+  <body>
+    <Header />
+    <main>
+      <section class="section search-section" aria-labelledby="search-title">
+        <div class="container">
+          <div class="section-heading">
+            <p>SEARCH</p>
+            <h1 id="search-title">記事検索</h1>
+          </div>
+          <div class="search-results" aria-live="polite"></div>
+        </div>
+      </section>
+    </main>
+    <Footer />
+  </body>
+</html>
+
+<script define:vars={{ articles }}>
+  const results = document.querySelector(".search-results");
+  const query = new URLSearchParams(window.location.search).get("q")?.trim() ?? "";
+  const normalizedQuery = query.toLocaleLowerCase("ja-JP");
+
+  const includesQuery = (text) => text.toLocaleLowerCase("ja-JP").includes(normalizedQuery);
+
+  const appendHighlightedText = (element, text) => {
+    const normalizedText = text.toLocaleLowerCase("ja-JP");
+    let start = 0;
+    let matchIndex = normalizedText.indexOf(normalizedQuery, start);
+
+    while (matchIndex !== -1) {
+      element.append(document.createTextNode(text.slice(start, matchIndex)));
+      const highlight = document.createElement("mark");
+      highlight.textContent = text.slice(matchIndex, matchIndex + query.length);
+      element.append(highlight);
+      start = matchIndex + query.length;
+      matchIndex = normalizedText.indexOf(normalizedQuery, start);
+    }
+
+    element.append(document.createTextNode(text.slice(start)));
+  };
+
+  const getExcerpt = (body) => {
+    const matchIndex = body.toLocaleLowerCase("ja-JP").indexOf(normalizedQuery);
+    const excerptStart = Math.max(0, matchIndex - 45);
+    const excerptEnd = Math.min(body.length, matchIndex + query.length + 75);
+    const prefix = excerptStart > 0 ? "…" : "";
+    const suffix = excerptEnd < body.length ? "…" : "";
+    return `${prefix}${body.slice(excerptStart, excerptEnd)}${suffix}`;
+  };
+
+  if (results) {
+    const matchingArticles = articles.filter((article) =>
+      includesQuery(article.title) || includesQuery(article.body),
+    );
+
+    if (matchingArticles.length === 0) {
+      const message = document.createElement("p");
+      message.textContent = "該当する記事がありません";
+      results.append(message);
+    } else {
+      const list = document.createElement("ul");
+      for (const article of matchingArticles) {
+        const item = document.createElement("li");
+        const meta = document.createElement("p");
+        meta.className = "article-meta";
+        const publishedDate = document.createElement("time");
+        appendHighlightedText(publishedDate, article.pubDate);
+        const category = document.createElement("span");
+        category.className = "article-category";
+        appendHighlightedText(category, article.category);
+        meta.append(publishedDate, category);
+
+        if (article.subcategories.length > 0) {
+          const subcategorySeparator = document.createElement("span");
+          subcategorySeparator.className = "subcategory-separator";
+          subcategorySeparator.setAttribute("aria-hidden", "true");
+          meta.append(subcategorySeparator);
+
+          for (const subcategory of article.subcategories) {
+            const subcategoryChip = document.createElement("span");
+            subcategoryChip.className = "subcategory-chip";
+            appendHighlightedText(subcategoryChip, subcategory);
+            meta.append(subcategoryChip);
+          }
+        }
+
+        const link = document.createElement("a");
+        link.href = article.url;
+        appendHighlightedText(link, article.title);
+        const excerpt = document.createElement("p");
+        excerpt.className = "article-excerpt";
+        appendHighlightedText(excerpt, getExcerpt(article.body));
+        item.append(meta);
+        item.append(link);
+        item.append(excerpt);
+        list.append(item);
+      }
+      results.append(list);
+    }
+  }
+</script>
+
+<style is:global>
+  :root {
+    font-family: "Noto Sans JP", "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+    color: #1f2937;
+    background: #fff;
+  }
+  * { box-sizing: border-box; }
+  body {
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+    min-height: 100vh;
+  }
+  main { flex: 1; }
+  .container {
+    margin: 0 auto;
+    max-width: 1200px;
+    padding-left: 24px;
+    padding-right: 24px;
+    width: 100%;
+  }
+  .section { padding: 32px 0; }
+  @media (max-width: 640px) {
+    .section { padding: 64px 0; }
+    .container { padding-left: 20px; padding-right: 20px; }
+  }
+</style>
+
+<style>
+  .search-section {
+    background: #f8fafc;
+    min-height: 50vh;
+  }
+  .section-heading {
+    margin-bottom: 30px;
+  }
+  .section-heading p {
+    color: #2563eb;
+    font-size: .73rem;
+    font-weight: 800;
+    letter-spacing: .14em;
+    margin: 0 0 8px;
+  }
+  .section-heading h1 {
+    color: #1f2937;
+    font-size: clamp(1.65rem, 3vw, 2rem);
+    margin: 0;
+  }
+  .search-results {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 24px;
+  }
+  .search-results :global(p) {
+    color: #6b7280;
+    font-size: .9rem;
+    margin: 0;
+  }
+  .search-results :global(ul) {
+    display: grid;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .search-results :global(li) {
+    padding: 16px 0;
+  }
+  .search-results :global(li:not(:last-child)) {
+    border-bottom: 1px solid #e5e7eb;
+  }
+  .search-results :global(.article-meta) {
+    color: #6b7280;
+    font-size: .76rem;
+    margin: 0 0 8px;
+  }
+  .search-results :global(.article-meta .article-category) {
+    border-left: 1px solid #d1d5db;
+    color: #2563eb;
+    margin-left: 10px;
+    padding-left: 10px;
+  }
+  .search-results :global(.article-meta .subcategory-separator) {
+    border-left: 1px solid #d1d5db;
+    display: inline-block;
+    height: .9em;
+    margin-left: 10px;
+    margin-right: 4px;
+    vertical-align: -.1em;
+  }
+  .search-results :global(.article-meta .subcategory-chip) {
+    background: #dbeafe;
+    border-radius: 999px;
+    color: #2563eb;
+    display: inline-block;
+    font-size: .68rem;
+    margin-left: 10px;
+    padding: 2px 7px;
+  }
+  .search-results :global(.article-excerpt) {
+    color: #6b7280;
+    font-size: .82rem;
+    line-height: 1.75;
+    margin: 8px 0 0;
+  }
+  .search-results :global(mark) {
+    background: #facc15;
+    color: inherit;
+    padding: 0 1px;
+  }
+  .search-results :global(a) {
+    color: #1f2937;
+    font-size: .95rem;
+    font-weight: 700;
+    line-height: 1.5;
+    text-decoration: none;
+  }
+  .search-results :global(a:hover) {
+    color: #2563eb;
+  }
+</style>

@@ -1,0 +1,112 @@
+---
+interface NavItem {
+  label: string;
+  href: string;
+}
+
+const navItems: NavItem[] = [
+{ label: "Home", href: "/" },
+  { label: "Blog", href: "#articles" },
+  { label: "About", href: "#about" },
+  { label: "Contact", href: "https://forms.cloud.microsoft/r/zNRw1PmW5r" },
+];
+---
+
+<header class="site-header">
+  <div class="container header-inner">
+    <a class="site-name" href="/">
+      Matsunami <span>Automation Works</span>
+    </a>
+    <nav aria-label="メインナビゲーション">
+      <ul class="nav-list">
+        {
+          navItems.map((item) => (
+            <li>
+              <a
+                href={item.href}
+                target={item.label === "Contact" ? "_blank" : undefined}
+                rel={
+                  item.label === "Contact"
+                    ? "noopener noreferrer"
+                    : undefined
+                }
+              >
+                {item.label}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<style>
+  .site-header {
+  background: #FFF;
+  border-bottom: 1px solid #e5e7eb;
+  }
+
+  .header-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 78px;
+    gap: 24px;
+  }
+
+  /* ロゴ */
+  .site-name {
+    color: #1f2937;
+    font-size: 22px;
+    font-weight: 700;
+    text-decoration: none;
+  }
+
+  .site-name span {
+    color: #2563eb;
+  }
+
+  /* ナビゲーション */
+  .nav-list {
+    display: flex;
+    align-items: center;
+    gap: 28px;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .nav-list a {
+    color: #374151;
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  .nav-list a:hover {
+    color: #3b82f6;
+  }
+
+  @media (max-width: 900px) {
+    .nav-list {
+      gap: 20px;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .header-inner {
+      min-height: auto;
+      padding-top: 14px;
+      padding-bottom: 14px;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 14px;
+    }
+
+    .nav-list {
+      gap: 19px;
+      flex-wrap: wrap;
+    }
+  }
+</style>

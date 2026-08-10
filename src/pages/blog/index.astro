@@ -1,0 +1,65 @@
+---
+import { getCollection } from "astro:content";
+import ArticleSection from "../../components/ArticleSection.astro";
+import ArticleSidebar from "../../components/ArticleSidebar.astro";
+import Footer from "../../components/Footer.astro";
+import Header from "../../components/Header.astro";
+import ProfileCard from "../../components/ProfileCard.astro";
+
+const articlesPerPage = 6;
+const allArticles = (await getCollection("blog"))
+  .sort((a, b) => b.data.pubDate.getTime() - a.data.pubDate.getTime())
+const articles = allArticles.slice(0, articlesPerPage);
+const lastPage = Math.ceil(allArticles.length / articlesPerPage);
+const pageUrl = (pageNumber: number) =>
+  pageNumber === 1 ? "/blog/" : `/blog/${pageNumber}/`;
+const pagination = {
+  currentPage: 1,
+  lastPage,
+  nextUrl: lastPage > 1 ? pageUrl(2) : undefined,
+  pages: Array.from({ length: lastPage }, (_, index) => ({
+    page: index + 1,
+    url: pageUrl(index + 1),
+  })),
+};
+---
+
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="description" content="ブログ記事一覧" />
+    <title>ブログ | Matsunami Automation Works</title>
+  </head>
+  <body>
+    <Header />
+    <main>
+      <ArticleSection {articles} {pagination}>
+        <ArticleSidebar><ProfileCard /></ArticleSidebar>
+      </ArticleSection>
+    </main>
+    <Footer />
+  </body>
+</html>
+
+<style is:global>
+  :root {
+    font-family: "Noto Sans JP", "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+    color: #1f2937;
+    background: #fff;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; }
+  .container {
+    margin: 0 auto;
+    max-width: 1200px;
+    padding-left: 24px;
+    padding-right: 24px;
+    width: 100%;
+  }
+  .section { padding-bottom: 32px; padding-top: 32px; }
+  @media (max-width: 640px) {
+    .section { padding-bottom: 64px; padding-top: 64px; }
+    .container { padding-left: 20px; padding-right: 20px; }
+  }
+</style>

@@ -1,0 +1,69 @@
+---
+import { getCollection, type CollectionEntry } from "astro:content";
+import type { Page } from "astro";
+import ArticleSection from "../../components/ArticleSection.astro";
+import ArticleSidebar from "../../components/ArticleSidebar.astro";
+import CategorySection from "../../components/CategorySection.astro";
+import Footer from "../../components/Footer.astro";
+import Header from "../../components/Header.astro";
+import ProfileCard from "../../components/ProfileCard.astro";
+
+const articlesPerPage = 6;
+
+export async function getStaticPaths({ paginate }: { paginate: (data: CollectionEntry<"blog">[], options: { pageSize: number }) => { params: { page: string }; props: { page: Page<CollectionEntry<"blog">> } }[] }) {
+  const articlesPerPage = 6;
+  const articles = (await getCollection("blog"))
+    .sort((a, b) => b.data.pubDate.getTime() - a.data.pubDate.getTime());
+
+  return paginate(articles, { pageSize: articlesPerPage })
+    .filter((path) => path.params.page !== "1");
+}
+
+interface Props {
+  page: Page<CollectionEntry<"blog">>;
+}
+
+const { page } = Astro.props;
+const pageUrl = (pageNumber: number) =>
+  pageNumber === 1 ? "/" : `/page/${pageNumber}/`;
+const pagination = {
+  currentPage: page.currentPage,
+  lastPage: page.lastPage,
+  nextUrl: page.currentPage < page.lastPage ? pageUrl(page.currentPage + 1) : undefined,
+  pages: Array.from({ length: page.lastPage }, (_, index) => ({
+    page: index + 1,
+    url: pageUrl(index + 1),
+  })),
+  previousUrl: page.currentPage > 1 ? pageUrl(page.currentPage - 1) : undefined,
+};
+---
+
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" href="/favicon.ico" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="generator" content={Astro.generator} />
+    <meta name="description" content="Power Platform、生成AI、デジタルツールの実践ノウハウを、初心者にもわかりやすく紹介します。" />
+    <title>Matsunami Automation Works</title>
+  </head>
+  <body>
+    <Header />
+    <main>
+      <CategorySection />
+      <ArticleSection articles={page.data} {pagination}><ArticleSidebar><ProfileCard /></ArticleSidebar></ArticleSection>
+    </main>
+    <Footer />
+  </body>
+</html>
+
+<style is:global>
+  :root { font-family: "Noto Sans JP", "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif; color: #1f2937; background: #fff; }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; }
+  .container { margin: 0 auto; max-width: 1200px; padding-left: 24px; padding-right: 24px; width: 100%; }
+  .section { padding-bottom: 32px; padding-top: 32px; }
+  @media (max-width: 640px) { .section { padding-bottom: 64px; padding-top: 64px; } .container { padding-left: 20px; padding-right: 20px; } }
+</style>

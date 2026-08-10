@@ -1,0 +1,44 @@
+---
+import { getCollection, type CollectionEntry } from 'astro:content';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('blog');
+  const categories = [...new Set(posts.map((post) => post.data.category))];
+
+  return categories.map((category) => ({
+    params: { category },
+    props: {
+      category,
+      posts: posts
+        .filter((post) => post.data.category === category)
+        .sort((a, b) => b.data.pubDate.getTime() - a.data.pubDate.getTime()),
+    },
+  }));
+}
+
+interface Props {
+  category: string;
+  posts: CollectionEntry<'blog'>[];
+}
+
+const { category, posts } = Astro.props;
+---
+
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>{category}の記事 | Matsunami Automation Works</title>
+  </head>
+  <body>
+    <main>
+      <h1>{category}の記事</h1>
+      <ul>
+        {posts.map((post) => (
+          <li><a href={`/blog/${post.id}/`}>{post.data.title}</a></li>
+        ))}
+      </ul>
+      <p><a href="/#articles">記事一覧に戻る</a></p>
+    </main>
+  </body>
+</html>

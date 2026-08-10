@@ -1,0 +1,13 @@
+---
+const footerLinks: { label: string; href: string }[] = [
+  { label: 'Home', href: '#home' }, { label: 'Blog', href: '/blog/' }, { label: 'About', href: '#about' }, { label: 'Contact', href: '/contact/' },
+];
+---
+
+<footer class="site-footer">
+  <div class="container footer-inner"><a class="footer-name" href="#home"><img src="/images/icon.png" alt="" width="13" height="13" /><span class="brand-name">Matsunami</span><span class="brand-accent">Automation Works</span></a><nav aria-label="フッターナビゲーション"><ul>{footerLinks.map((link) => <li><a href={link.href}>{link.label}</a></li>)}</ul></nav><p>© 2026 Matsunami Automation Works</p></div>
+</footer>
+
+<style>
+  .site-footer { background: #fff; border-top: 1px solid #e5e7eb; }.footer-inner { align-items: center; display: flex; gap: 24px; justify-content: space-between; min-height: 110px; }.footer-name { align-items: center; color: #1f2937; display: inline-flex; font-size: .88rem; font-weight: 800; gap: 5px; text-decoration: none; white-space: nowrap; }.footer-name img { height: 13px; object-fit: contain; width: 13px; }.footer-name .brand-name { color: #1f2937; }.footer-name .brand-accent { color: #2563eb; }.site-footer ul { display: flex; gap: 20px; list-style: none; margin: 0; padding: 0; }.site-footer li a, .site-footer p { color: #6b7280; font-size: .76rem; text-decoration: none; }.site-footer li a:hover { color: #2563eb; } .site-footer p { margin: 0; white-space: nowrap; } @media (max-width: 760px) { .footer-inner { align-items: flex-start; flex-direction: column; gap: 15px; padding-top: 30px; padding-bottom: 30px; } .site-footer ul { flex-wrap: wrap; } }
+</style>
