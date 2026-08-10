@@ -98,6 +98,7 @@ const olderPost = currentIndex >= 0 ? sortedPosts[currentIndex + 1] : undefined;
 <html lang="ja">
   <head>
     <meta charset="utf-8" />
+    <link rel="icon" type="image/png" href="/images/icon.png" />
     <meta name="viewport" content="width=device-width" />
     <meta name="description" content={props.kind === 'article' ? props.post.data.summary : 'ブログ記事一覧'} />
     <title>{props.kind === 'article' ? `${props.post.data.title} | Matsunami Automation Works` : 'ブログ | Matsunami Automation Works'}</title>
