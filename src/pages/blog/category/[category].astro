@@ -1,5 +1,6 @@
 ---
 import { getCollection, type CollectionEntry } from 'astro:content';
+import OgpMeta from '../../../components/OgpMeta.astro';
 
 export async function getStaticPaths() {
   const posts = await getCollection('blog');
@@ -29,6 +30,7 @@ const { category, posts } = Astro.props;
     <meta charset="utf-8" />
     <link rel="icon" type="image/png" href="/images/icon.png" />
     <meta name="viewport" content="width=device-width" />
+    <OgpMeta title={`${category}の記事 | Matsunami Automation Works`} description={`${category}に関する記事一覧です。`} url={Astro.url.pathname} />
     <title>{category}の記事 | Matsunami Automation Works</title>
   </head>
   <body>

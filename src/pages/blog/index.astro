@@ -5,6 +5,7 @@ import ArticleSidebar from "../../components/ArticleSidebar.astro";
 import Footer from "../../components/Footer.astro";
 import Header from "../../components/Header.astro";
 import ProfileCard from "../../components/ProfileCard.astro";
+import OgpMeta from "../../components/OgpMeta.astro";
 
 const articlesPerPage = 6;
 const allArticles = (await getCollection("blog"))
@@ -30,6 +31,7 @@ const pagination = {
     <link rel="icon" type="image/png" href="/images/icon.png" />
     <meta name="viewport" content="width=device-width" />
     <meta name="description" content="ブログ記事一覧" />
+    <OgpMeta title="ブログ | Matsunami Automation Works" description="Matsunami Automation Worksのブログ記事一覧です。" url={Astro.url.pathname} />
     <title>ブログ | Matsunami Automation Works</title>
   </head>
   <body>

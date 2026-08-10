@@ -1,6 +1,7 @@
 ---
 import Footer from "../components/Footer.astro";
 import Header from "../components/Header.astro";
+import OgpMeta from "../components/OgpMeta.astro";
 ---
 
 <html lang="ja">
@@ -9,6 +10,7 @@ import Header from "../components/Header.astro";
     <link rel="icon" type="image/png" href="/images/icon.png" />
     <meta name="viewport" content="width=device-width" />
     <meta name="description" content="お問い合わせフォーム" />
+    <OgpMeta title="お問い合わせ | Matsunami Automation Works" description="Matsunami Automation Worksへのお問い合わせフォームです。" url={Astro.url.pathname} />
     <title>お問い合わせ | Matsunami Automation Works</title>
   </head>
   <body>

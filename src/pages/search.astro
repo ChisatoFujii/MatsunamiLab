@@ -2,6 +2,7 @@
 import { getCollection } from "astro:content";
 import Footer from "../components/Footer.astro";
 import Header from "../components/Header.astro";
+import OgpMeta from "../components/OgpMeta.astro";
 
 const formatDate = (date: Date) =>
   new Intl.DateTimeFormat("ja-JP", {
@@ -42,6 +43,7 @@ const articles = (await getCollection("blog")).map((article) => ({
     <link rel="icon" type="image/png" href="/images/icon.png" />
     <meta name="viewport" content="width=device-width" />
     <meta name="description" content="ブログ記事の検索結果" />
+    <OgpMeta title="記事検索 | Matsunami Automation Works" description="Matsunami Automation Worksのブログ記事を検索できます。" url={Astro.url.pathname} />
     <title>記事検索 | Matsunami Automation Works</title>
   </head>
   <body>

@@ -6,6 +6,7 @@ import ArticleSidebar from '../../components/ArticleSidebar.astro';
 import Footer from '../../components/Footer.astro';
 import Header from '../../components/Header.astro';
 import ProfileCard from '../../components/ProfileCard.astro';
+import OgpMeta from '../../components/OgpMeta.astro';
 
 export async function getStaticPaths() {
   const articlesPerPage = 6;
@@ -93,6 +94,27 @@ const relatedPosts = props.kind === 'article'
   : [];
 const newerPost = currentIndex > 0 ? sortedPosts[currentIndex - 1] : undefined;
 const olderPost = currentIndex >= 0 ? sortedPosts[currentIndex + 1] : undefined;
+const toPlainText = (markdown: string) =>
+  markdown
+    .replace(/```[\s\S]*?```/g, ' ')
+    .replace(/!\[[^\]]*\]\([^)]*\)/g, ' ')
+    .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/^:::[^\n]*$/gm, ' ')
+    .replace(/[*_~`#]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+const getFirstImage = (markdown: string) =>
+  markdown.match(/!\[[^\]]*\]\(([^\s)]+)/)?.[1];
+const articleDescription = props.kind === 'article'
+  ? `${toPlainText(props.post.body).slice(0, 120)}${toPlainText(props.post.body).length > 120 ? '…' : ''}`
+  : 'Matsunami Automation Worksのブログ記事一覧です。';
+const articleImage = props.kind === 'article'
+  ? props.post.data.thumbnail ?? getFirstImage(props.post.body)
+  : undefined;
+const pageTitle = props.kind === 'article'
+  ? `${props.post.data.title} | Matsunami Automation Works`
+  : 'ブログ | Matsunami Automation Works';
 ---
 
 <html lang="ja">
@@ -100,8 +122,15 @@ const olderPost = currentIndex >= 0 ? sortedPosts[currentIndex + 1] : undefined;
     <meta charset="utf-8" />
     <link rel="icon" type="image/png" href="/images/icon.png" />
     <meta name="viewport" content="width=device-width" />
-    <meta name="description" content={props.kind === 'article' ? props.post.data.summary : 'ブログ記事一覧'} />
-    <title>{props.kind === 'article' ? `${props.post.data.title} | Matsunami Automation Works` : 'ブログ | Matsunami Automation Works'}</title>
+    <meta name="description" content={articleDescription} />
+    <OgpMeta
+      title={pageTitle}
+      description={articleDescription}
+      url={Astro.url.pathname}
+      image={articleImage}
+      type={props.kind === 'article' ? 'article' : 'website'}
+    />
+    <title>{pageTitle}</title>
   </head>
   <body>
     {props.kind === 'listing' ? (
